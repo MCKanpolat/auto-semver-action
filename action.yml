@@ -18,7 +18,7 @@ inputs:
     description: 'Token to get tags from the repo. Pass in using `secrets.GITHUB_TOKEN`.'
     required: true
 runs:
-  using: 'node16'
+  using: 'node20'
   main: 'dist/index.js'
 branding:
   icon: 'arrow-up-right'  
