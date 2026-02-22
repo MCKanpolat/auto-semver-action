@@ -111,7 +111,6 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getMostRecentVersionFromTags = exports.increment = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const semver_1 = __importDefault(__nccwpck_require__(1383));
-const matcher = __importStar(__nccwpck_require__(3618));
 const github = __importStar(__nccwpck_require__(5438));
 const releaseTypeOrder = [
     'major',
@@ -137,9 +136,10 @@ function increment(versionNumber, versionIdentifier, commitMessages, defaultRele
     let matchedLabels = new Array();
     for (const message of commitMessages) {
         let msgMatch = false;
+        const normalizedMessage = message.toLowerCase();
         for (const [key, value] of Object.entries(defaultConfig)) {
             for (const releaseType of value) {
-                if (matcher.isMatch(message, `*#${releaseType}*`)) {
+                if (normalizedMessage.includes(`#${releaseType}`)) {
                     matchedLabels.push(key);
                     msgMatch = true;
                 }
@@ -34213,151 +34213,6 @@ function parseParams (str) {
 module.exports = parseParams
 
 
-/***/ }),
-
-/***/ 3618:
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __nccwpck_require__) => {
-
-"use strict";
-// ESM COMPAT FLAG
-__nccwpck_require__.r(__webpack_exports__);
-
-// EXPORTS
-__nccwpck_require__.d(__webpack_exports__, {
-  "isMatch": () => (/* binding */ isMatch),
-  "matcher": () => (/* binding */ matcher)
-});
-
-;// CONCATENATED MODULE: ./node_modules/matcher/node_modules/escape-string-regexp/index.js
-function escapeStringRegexp(string) {
-	if (typeof string !== 'string') {
-		throw new TypeError('Expected a string');
-	}
-
-	// Escape characters with special meaning either inside or outside character sets.
-	// Use a simple backslash escape when it’s always valid, and a `\xnn` escape when the simpler form would be disallowed by Unicode patterns’ stricter grammar.
-	return string
-		.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&')
-		.replace(/-/g, '\\x2d');
-}
-
-;// CONCATENATED MODULE: ./node_modules/matcher/index.js
-
-
-const regexpCache = new Map();
-
-const sanitizeArray = (input, inputName) => {
-	if (!Array.isArray(input)) {
-		switch (typeof input) {
-			case 'string':
-				input = [input];
-				break;
-			case 'undefined':
-				input = [];
-				break;
-			default:
-				throw new TypeError(`Expected '${inputName}' to be a string or an array, but got a type of '${typeof input}'`);
-		}
-	}
-
-	return input.filter(string => {
-		if (typeof string !== 'string') {
-			if (typeof string === 'undefined') {
-				return false;
-			}
-
-			throw new TypeError(`Expected '${inputName}' to be an array of strings, but found a type of '${typeof string}' in the array`);
-		}
-
-		return true;
-	});
-};
-
-const makeRegexp = (pattern, options) => {
-	options = {
-		caseSensitive: false,
-		...options,
-	};
-
-	const cacheKey = pattern + JSON.stringify(options);
-
-	if (regexpCache.has(cacheKey)) {
-		return regexpCache.get(cacheKey);
-	}
-
-	const negated = pattern[0] === '!';
-
-	if (negated) {
-		pattern = pattern.slice(1);
-	}
-
-	pattern = escapeStringRegexp(pattern).replace(/\\\*/g, '[\\s\\S]*');
-
-	const regexp = new RegExp(`^${pattern}$`, options.caseSensitive ? '' : 'i');
-	regexp.negated = negated;
-	regexpCache.set(cacheKey, regexp);
-
-	return regexp;
-};
-
-const baseMatcher = (inputs, patterns, options, firstMatchOnly) => {
-	inputs = sanitizeArray(inputs, 'inputs');
-	patterns = sanitizeArray(patterns, 'patterns');
-
-	if (patterns.length === 0) {
-		return [];
-	}
-
-	patterns = patterns.map(pattern => makeRegexp(pattern, options));
-
-	const {allPatterns} = options || {};
-	const result = [];
-
-	for (const input of inputs) {
-		// String is included only if it matches at least one non-negated pattern supplied.
-		// Note: the `allPatterns` option requires every non-negated pattern to be matched once.
-		// Matching a negated pattern excludes the string.
-		let matches;
-		const didFit = [...patterns].fill(false);
-
-		for (const [index, pattern] of patterns.entries()) {
-			if (pattern.test(input)) {
-				didFit[index] = true;
-				matches = !pattern.negated;
-
-				if (!matches) {
-					break;
-				}
-			}
-		}
-
-		if (
-			!(
-				matches === false
-				|| (matches === undefined && patterns.some(pattern => !pattern.negated))
-				|| (allPatterns && didFit.some((yes, index) => !yes && !patterns[index].negated))
-			)
-		) {
-			result.push(input);
-
-			if (firstMatchOnly) {
-				break;
-			}
-		}
-	}
-
-	return result;
-};
-
-function matcher(inputs, patterns, options) {
-	return baseMatcher(inputs, patterns, options, false);
-}
-
-function isMatch(inputs, patterns, options) {
-	return baseMatcher(inputs, patterns, options, true).length > 0;
-}
-
-
 /***/ })
 
 /******/ 	});
@@ -34393,34 +34248,6 @@ function isMatch(inputs, patterns, options) {
 /******/ 	}
 /******/ 	
 /************************************************************************/
-/******/ 	/* webpack/runtime/define property getters */
-/******/ 	(() => {
-/******/ 		// define getter functions for harmony exports
-/******/ 		__nccwpck_require__.d = (exports, definition) => {
-/******/ 			for(var key in definition) {
-/******/ 				if(__nccwpck_require__.o(definition, key) && !__nccwpck_require__.o(exports, key)) {
-/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
-/******/ 				}
-/******/ 			}
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
-/******/ 	(() => {
-/******/ 		__nccwpck_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/make namespace object */
-/******/ 	(() => {
-/******/ 		// define __esModule on exports
-/******/ 		__nccwpck_require__.r = (exports) => {
-/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 			}
-/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 		};
-/******/ 	})();
-/******/ 	
 /******/ 	/* webpack/runtime/compat */
 /******/ 	
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";

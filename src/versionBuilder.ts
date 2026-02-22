@@ -1,6 +1,5 @@
 import * as core from '@actions/core'
 import semver from 'semver'
-import * as matcher from 'matcher'
 import * as github from '@actions/github'
 import { Context } from '@actions/github/lib/context'
 
@@ -37,9 +36,10 @@ export function increment(
 
   for (const message of commitMessages) {
     let msgMatch = false
+    const normalizedMessage = message.toLowerCase()
     for (const [key, value] of Object.entries(defaultConfig)) {
       for (const releaseType of value) {
-        if (matcher.isMatch(message, `*#${releaseType}*`)) {
+        if (normalizedMessage.includes(`#${releaseType}`)) {
           matchedLabels.push(key)
           msgMatch = true
         }
