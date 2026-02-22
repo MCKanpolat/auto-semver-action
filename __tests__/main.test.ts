@@ -41,3 +41,51 @@ test('increment multiple version', () => {
   console.log(nextVersion.version)
   expect(nextVersion.version).toEqual('2.1.1')
 })
+
+test('increment highest release type once when per-commit disabled', () => {
+  const nextVersion = increment(
+    '1.0.0',
+    '',
+    ['feat: add x #minor', 'breaking api #major', 'fix: typo #patch'],
+    'patch',
+    false
+  )
+  console.log(nextVersion.version)
+  expect(nextVersion.version).toEqual('2.0.0')
+})
+
+test('uses default release type when no tags are present', () => {
+  const nextVersion = increment(
+    '1.0.0',
+    '',
+    ['feat: add docs', 'chore: lint'],
+    'patch',
+    false
+  )
+  console.log(nextVersion.version)
+  expect(nextVersion.version).toEqual('1.0.1')
+})
+
+test('uses default release type when commit list is empty', () => {
+  const nextVersion = increment('1.0.0', '', [], 'minor', false)
+  console.log(nextVersion.version)
+  expect(nextVersion.version).toEqual('1.1.0')
+})
+
+test('matches release tags case-insensitively', () => {
+  const nextVersion = increment('1.0.0', '', ['BREAKING: API #MAJOR'], 'patch', false)
+  console.log(nextVersion.version)
+  expect(nextVersion.version).toEqual('2.0.0')
+})
+
+test('per-commit mode increments default type for unmatched commits', () => {
+  const nextVersion = increment(
+    '1.0.0',
+    '',
+    ['feat: add x #minor', 'docs: update', 'fix: typo'],
+    'patch',
+    true
+  )
+  console.log(nextVersion.version)
+  expect(nextVersion.version).toEqual('1.1.2')
+})
