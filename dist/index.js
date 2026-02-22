@@ -112,7 +112,7 @@ exports.getMostRecentVersionFromTags = exports.increment = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const semver_1 = __importDefault(__nccwpck_require__(1383));
 const github = __importStar(__nccwpck_require__(5438));
-const releaseTypeOrder = [
+const RELEASE_TYPES = [
     'major',
     'premajor',
     'minor',
@@ -121,6 +121,7 @@ const releaseTypeOrder = [
     'prepatch',
     'prerelease'
 ];
+const releaseTypeOrder = RELEASE_TYPES;
 const defaultConfig = {
     major: ['major'],
     premajor: ['premajor'],
@@ -130,30 +131,43 @@ const defaultConfig = {
     prepatch: ['prepatch'],
     prerelease: ['prerelease']
 };
+const FALLBACK_RELEASE_TYPE = 'patch';
+function getMatchedReleaseTypes(message) {
+    const matchedReleaseTypes = [];
+    const tagsInMessage = new Set((message.toLowerCase().match(/#[a-z]+/g) || []).map(tag => tag.replace(/^#/, '')));
+    for (const releaseType of RELEASE_TYPES) {
+        const aliases = defaultConfig[releaseType];
+        if (aliases.some(alias => tagsInMessage.has(alias))) {
+            matchedReleaseTypes.push(releaseType);
+        }
+    }
+    return matchedReleaseTypes;
+}
+function normalizeReleaseType(releaseType) {
+    const normalizedReleaseType = releaseType.toLowerCase();
+    if (RELEASE_TYPES.includes(normalizedReleaseType)) {
+        return normalizedReleaseType;
+    }
+    core.warning(`Invalid releaseType '${releaseType}' provided. Falling back to '${FALLBACK_RELEASE_TYPE}'.`);
+    return FALLBACK_RELEASE_TYPE;
+}
 function increment(versionNumber, versionIdentifier, commitMessages, defaultReleaseType, incrementPerCommit) {
     const version = semver_1.default.parse(versionNumber) || new semver_1.default.SemVer('0.0.0');
+    const normalizedDefaultReleaseType = normalizeReleaseType(defaultReleaseType);
     core.debug(`Config used => ${JSON.stringify(defaultConfig)}`);
-    let matchedLabels = new Array();
+    let matchedLabels = [];
     for (const message of commitMessages) {
-        let msgMatch = false;
-        const normalizedMessage = message.toLowerCase();
-        for (const [key, value] of Object.entries(defaultConfig)) {
-            for (const releaseType of value) {
-                if (normalizedMessage.includes(`#${releaseType}`)) {
-                    matchedLabels.push(key);
-                    msgMatch = true;
-                }
-            }
-        }
-        if (incrementPerCommit && !msgMatch) {
-            matchedLabels.push(defaultReleaseType);
+        const matchedReleaseTypes = getMatchedReleaseTypes(message);
+        matchedLabels.push(...matchedReleaseTypes);
+        if (incrementPerCommit && matchedReleaseTypes.length === 0) {
+            matchedLabels.push(normalizedDefaultReleaseType);
         }
     }
     core.debug(`Parsed labels from commit messages => ${JSON.stringify([
         ...matchedLabels
     ])}`);
     if (matchedLabels.length === 0) {
-        matchedLabels.push(defaultReleaseType);
+        matchedLabels.push(normalizedDefaultReleaseType);
     }
     //find highest release type and singularize
     if (!incrementPerCommit) {

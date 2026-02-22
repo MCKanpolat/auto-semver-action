@@ -89,3 +89,27 @@ test('per-commit mode increments default type for unmatched commits', () => {
   console.log(nextVersion.version)
   expect(nextVersion.version).toEqual('1.1.2')
 })
+
+test('does not match partial tags like #majorfix', () => {
+  const nextVersion = increment(
+    '1.0.0',
+    '',
+    ['feat: add parser #majorfix'],
+    'patch',
+    false
+  )
+  console.log(nextVersion.version)
+  expect(nextVersion.version).toEqual('1.0.1')
+})
+
+test('normalizes default release type case-insensitively', () => {
+  const nextVersion = increment('1.0.0', '', ['chore: no tag'], 'MINOR', false)
+  console.log(nextVersion.version)
+  expect(nextVersion.version).toEqual('1.1.0')
+})
+
+test('falls back to patch when default release type is invalid', () => {
+  const nextVersion = increment('1.0.0', '', ['chore: no tag'], 'invalid', false)
+  console.log(nextVersion.version)
+  expect(nextVersion.version).toEqual('1.0.1')
+})
