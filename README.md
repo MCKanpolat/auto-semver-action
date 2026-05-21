@@ -63,7 +63,7 @@ Notes:
 ```yaml
    steps:
     - name: Auto Increment Semver Action
-      uses: MCKanpolat/auto-semver-action@v2
+      uses: MCKanpolat/auto-semver-action@v3
       id: versioning
       with:
         releaseType: patch 
